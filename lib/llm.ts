@@ -122,22 +122,48 @@ export async function generateSQL(
   const systemPrompt = `You are an expert SQL analyst. Generate SQL queries based on natural language questions.
 
 CONTEXT:
-- You are working with a SQL database
+- You are working with a SQL database (SQLite syntax)
 - Always provide syntactically correct SQL
-- Use standard SQL syntax unless specified otherwise
+- Use standard SQL syntax
+
+IMPORTANT ANALYTICS PATTERNS:
+1. Revenue/profit: SUM(column) from the relevant table (often order_items.subtotal or orders.total_amount)
+2. Date filtering - YOU MUST USE POSTGRESQL SYNTAX:
+   - "last month" = (DATE_TRUNC('month', NOW()) - INTERVAL '1 month') to DATE_TRUNC('month', NOW())
+   - "this month" = DATE_TRUNC('month', NOW()) to NOW()
+   - "last week" = (NOW() - INTERVAL '7 days')
+   - "last N days" = (NOW() - INTERVAL 'N days')
+   - "last N months" = (NOW() - INTERVAL 'N months')
+   - NEVER use date() or datetime() functions - they are NOT valid PostgreSQL
+3. Top N results: Use LIMIT N with ORDER BY
+4. Product/Sales analytics requires JOINs: products → order_items → orders
+
+CRITICAL: This is POSTGRESQL - use DATE_TRUNC and INTERVAL keywords.
 
 SCHEMA:
 ${schema}
 ${context ? `\nADDITIONAL CONTEXT:\n${context}` : ''}
 
+CORRECT PostgreSQL EXAMPLE:
+"top 5 products by revenue last month":
+SELECT p.name, SUM(oi.subtotal) as revenue
+FROM products p
+JOIN order_items oi ON p.id = oi.product_id
+JOIN orders o ON oi.order_id = o.id
+WHERE o.created_at >= (DATE_TRUNC('month', NOW()) - INTERVAL '1 month')
+  AND o.created_at < DATE_TRUNC('month', NOW())
+GROUP BY p.id, p.name
+ORDER BY revenue DESC
+LIMIT 5
+
 OUTPUT FORMAT:
-Return your response as valid JSON with exactly this structure:
+CRITICAL: Return ONLY valid JSON, no markdown, no code blocks, no explanations outside JSON.
+Your response must be exactly this structure:
 {
-  "sql": "the SQL query",
+  "sql": "the SQL query as plain text, no markdown",
   "explanation": "brief explanation of what the query does"
 }
-
-Only output the JSON, no other text.`;
+Do NOT wrap in triple backticks or include any other text.`;
 
   const response = await retryWithBackoff(() =>
     callLLM([
@@ -147,14 +173,32 @@ Only output the JSON, no other text.`;
   );
 
   try {
-    const parsed = JSON.parse(response.content) as { sql: string; explanation: string };
+    // Clean up "json" prefix that some LLMs add before JSON output
+    let cleanedContent = response.content.replace(/^json\s*/i, '').trim();
+    
+    // Try to parse as JSON first
+    let sql = '';
+    let explanation = 'Generated SQL query';
+    
+    try {
+      const parsed = JSON.parse(cleanedContent) as { sql: string; explanation: string };
+      sql = parsed.sql || '';
+      explanation = parsed.explanation || 'Generated SQL query';
+    } catch {
+      // If JSON parsing fails, use raw content
+      sql = cleanedContent;
+    }
+    
+    // Clean up markdown code blocks if present
+    sql = sql.replace(/^```sql\s*/i, '').replace(/^```\s*/i, '').replace(/\s*```$/i, '').trim();
+    
     return {
-      sql: parsed.sql || '',
-      explanation: parsed.explanation || '',
+      sql,
+      explanation,
     };
   } catch {
     return {
-      sql: response.content,
+      sql: response.content.replace(/^```sql\s*/i, '').replace(/^```\s*/i, '').replace(/\s*```$/i, '').trim(),
       explanation: 'Generated SQL query',
     };
   }

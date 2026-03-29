@@ -163,7 +163,9 @@ export class QueryExecutor {
       if (err instanceof Error && err.message.includes('timeout')) {
         throw err;
       }
-      throw new Error(`Query execution failed: ${(err as Error).message}`);
+      const errorMsg = err instanceof Error ? err.message : String(err);
+      console.error('Query execution error details:', err);
+      throw new Error(`Query execution failed: ${errorMsg || 'Unknown error - check database connection'}`);
     }
 
     const executionTimeMs = Date.now() - startTime;

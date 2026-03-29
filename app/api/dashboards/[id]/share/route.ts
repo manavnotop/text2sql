@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { dashboards } from '../../../store';
+import { dashboards } from '../../store';
 
 export async function GET(
   _request: NextRequest,

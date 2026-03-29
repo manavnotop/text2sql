@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { dashboards, Dashboard } from '../../store';
+import { dashboards, Dashboard } from '../store';
 
 export async function GET(
   _request: NextRequest,
@@ -33,8 +33,8 @@ export async function PUT(
 
     const body = await request.json();
 
-    if (!body.name || typeof body.name !== 'string') {
-      return NextResponse.json({ error: 'Name is required' }, { status: 400 });
+    if (body.name !== undefined && typeof body.name !== 'string') {
+      return NextResponse.json({ error: 'Name must be a string' }, { status: 400 });
     }
 
     if (body.widgets && !Array.isArray(body.widgets)) {
@@ -43,7 +43,7 @@ export async function PUT(
 
     const updatedDashboard: Dashboard = {
       ...dashboard,
-      name: body.name,
+      name: body.name ?? dashboard.name,
       widgets: body.widgets ?? dashboard.widgets,
       updatedAt: new Date().toISOString(),
     };

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { Pool } from 'pg';
 import { v4 as uuidv4 } from 'uuid';
+import { dashboards } from '../dashboards/store';
 
 interface ConnectionConfig {
   id: string;
@@ -22,12 +23,16 @@ interface SchemaInfo {
       nullable: boolean;
     }>;
   }>;
+  summary: {
+    totalTables: number;
+    totalColumns: number;
+    totalRelationships: number;
+  };
 }
 
-const savedConnections = new Map<string, ConnectionConfig>();
-
 async function analyzeSchema(pool: Pool): Promise<SchemaInfo> {
-  const result: SchemaInfo = { tables: [] };
+  const tables: SchemaInfo['tables'] = [];
+  let totalColumns = 0;
 
   try {
     const tablesResult = await pool.query(`
@@ -45,7 +50,7 @@ async function analyzeSchema(pool: Pool): Promise<SchemaInfo> {
         ORDER BY ordinal_position
       `, [row.table_name]);
 
-      result.tables.push({
+      tables.push({
         name: row.table_name,
         columns: columnsResult.rows.map(col => ({
           name: col.column_name,
@@ -53,13 +58,23 @@ async function analyzeSchema(pool: Pool): Promise<SchemaInfo> {
           nullable: col.is_nullable === 'YES',
         })),
       });
+      totalColumns += columnsResult.rows.length;
     }
   } catch (error) {
     console.error('Schema analysis error:', error);
   }
 
-  return result;
+  return {
+    tables,
+    summary: {
+      totalTables: tables.length,
+      totalColumns,
+      totalRelationships: 0,
+    },
+  };
 }
+
+const savedConnections = new Map<string, ConnectionConfig>();
 
 function validateConnection(body: {
   host?: unknown;
@@ -137,6 +152,17 @@ export async function POST(request: NextRequest) {
         createdAt: new Date().toISOString(),
       };
       savedConnections.set(connectionId, connection);
+
+      const now = new Date().toISOString();
+      const dashboard = {
+        id: connectionId,
+        name: body.name || `${body.database} Dashboard`,
+        widgets: [],
+        createdAt: now,
+        updatedAt: now,
+        shareId: uuidv4(),
+      };
+      dashboards.set(connectionId, dashboard);
 
       await pool.end();
 

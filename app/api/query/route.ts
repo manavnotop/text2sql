@@ -60,6 +60,15 @@ export async function POST(request: NextRequest) {
 
     const { sql, explanation } = await generateSQL(body.question, context);
 
+    console.log('Generated SQL:', sql);
+
+    if (!sql || sql.trim().length === 0) {
+      return NextResponse.json(
+        { success: false, error: 'Failed to generate SQL query. Please try again.' },
+        { status: 400 }
+      );
+    }
+
     const validation = validateQuery(sql);
     if (!validation.isValid) {
       return NextResponse.json(
@@ -76,6 +85,8 @@ export async function POST(request: NextRequest) {
       maxRows: 1000,
       timeoutMs: 30000,
     });
+
+    console.log('Executing SQL:', sql);
 
     const result = await executor.execute(pool, sql);
 
