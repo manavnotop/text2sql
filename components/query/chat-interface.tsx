@@ -63,8 +63,8 @@ function ChatInterfaceComponent({ messages, onSendMessage, isLoading, className 
   }, []);
 
   return (
-    <div className={cn('flex flex-col h-full w-full overflow-hidden', className)}>
-      <div className="flex-1 overflow-y-auto p-4 space-y-4 w-full max-w-full">
+    <div className={cn('flex flex-col h-full w-full overflow-hidden box-border', className)}>
+      <div className="flex-1 overflow-y-auto p-4 space-y-4 w-full max-w-full box-border">
         {messages.length === 0 && (
           <div className="flex flex-col items-center justify-center h-full text-center">
           <div className="text-foreground text-base font-medium">
@@ -83,7 +83,7 @@ function ChatInterfaceComponent({ messages, onSendMessage, isLoading, className 
             )}
           >
             <div className={cn(
-              'max-w-[80%] rounded-lg px-5 py-3 text-base font-medium',
+              'max-w-[80%] rounded-lg px-5 py-3 text-base font-medium break-words',
               message.role === 'user'
                 ? 'bg-primary text-primary-foreground'
                 : 'bg-muted text-foreground'

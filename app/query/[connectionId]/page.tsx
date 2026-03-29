@@ -224,11 +224,15 @@ export default function QueryPage() {
 
   return (
     <div className="flex h-screen overflow-hidden w-full max-w-full box-border">
-      <Sidebar className={sidebarCollapsed ? '' : 'border-r'} />
+      <Sidebar 
+        className="border-r" 
+        isCollapsed={sidebarCollapsed} 
+        onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
+      />
 
-      <div className="flex flex-1 w-full max-w-full box-border">
+      <div className="flex flex-1 w-full max-w-full box-border overflow-hidden">
         <aside className={cn(
-          'w-64 border-r border-border bg-card overflow-y-auto transition-all',
+          'w-64 border-r border-border bg-card overflow-y-auto transition-all flex-shrink-0',
           sidebarCollapsed && 'hidden'
         )}>
           <div className="p-3 border-b border-border">
@@ -237,7 +241,7 @@ export default function QueryPage() {
           <SchemaBrowser onTableClick={handleTableClick} onColumnClick={handleColumnClick} />
         </aside>
 
-        <main className="flex-1 flex flex-col overflow-hidden w-full max-w-full box-border">
+        <main className="flex-1 flex flex-col overflow-hidden w-full max-w-full box-border flex-shrink-0">
           <div className="flex items-center justify-between border-b border-border px-4 py-2 min-h-[52px]">
             <div className="flex items-center gap-3">
               {viewMode === 'results' && queryResults.length > 0 && (
@@ -289,7 +293,7 @@ export default function QueryPage() {
             </div>
           </div>
 
-          <div className="flex-1 overflow-hidden transition-all duration-200 w-full max-w-full">
+          <div className="flex-1 overflow-hidden transition-all duration-200 w-full max-w-full box-border">
             {viewMode === 'results' && currentData.length > 0 ? (
               <div className="h-full flex flex-col">
                 {showChart ? (
@@ -327,6 +331,7 @@ export default function QueryPage() {
               </div>
             ) : (
               <ChatInterface
+                key={`chat-${messages.length}`}
                 messages={messages}
                 onSendMessage={handleSendMessage}
                 isLoading={isLoading}

@@ -24,12 +24,13 @@ const navItems: NavItem[] = [
 
 interface SidebarProps {
   className?: string;
+  isCollapsed?: boolean;
+  onToggleCollapse?: () => void;
 }
 
-function SidebarComponent({ className }: SidebarProps) {
+function SidebarComponent({ className, isCollapsed = false, onToggleCollapse }: SidebarProps) {
   const { connection, schema } = useApp();
   const pathname = usePathname();
-  const [isCollapsed, setIsCollapsed] = useState(false);
   const [schemaExpanded, setSchemaExpanded] = useState(true);
 
   return (
@@ -45,7 +46,7 @@ function SidebarComponent({ className }: SidebarProps) {
           <span className="text-sm font-semibold text-foreground">BI Platform</span>
         )}
         <button
-          onClick={() => setIsCollapsed(!isCollapsed)}
+          onClick={onToggleCollapse}
           className="flex h-7 w-7 items-center justify-center rounded hover:bg-muted transition-colors"
           aria-label={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
         >

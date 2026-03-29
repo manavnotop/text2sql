@@ -1,20 +1,28 @@
 'use client';
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Database01Icon, Settings04Icon } from '@hugeicons/core-free-icons';
+import { Database01Icon, Settings04Icon, Logout01Icon } from '@hugeicons/core-free-icons';
 import { HugeIcon } from '@/components/ui/icon';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { DemoConnect } from '@/components/connection/demo-connect';
 import { ConnectionForm } from '@/components/connection/connection-form';
 import { useApp } from '@/context/app-context';
+import { useAuth } from '@/context/auth-context';
 import { cn } from '@/lib/utils';
 
 export default function HomePage() {
   const router = useRouter();
   const { setConnection, setSchema } = useApp();
+  const { isAuthenticated, logout, user } = useAuth();
   const [showCustomForm, setShowCustomForm] = useState(false);
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      router.push('/login');
+    }
+  }, [isAuthenticated, router]);
 
   const handleDemoConnect = useCallback(async () => {
     try {
@@ -111,6 +119,15 @@ export default function HomePage() {
               <HugeIcon icon={Database01Icon} size={18} className="text-primary-foreground" />
             </div>
             <span className="text-sm font-semibold">Conversational BI</span>
+          </div>
+          <div className="flex items-center gap-4">
+            {user && (
+              <span className="text-xs text-muted-foreground">{user.username}</span>
+            )}
+            <Button variant="ghost" size="sm" onClick={logout}>
+              <HugeIcon icon={Logout01Icon} size={16} className="mr-1" />
+              Logout
+            </Button>
           </div>
         </div>
       </header>

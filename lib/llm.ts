@@ -45,7 +45,17 @@ interface OpenRouterResponse {
 }
 
 function getConfig(): LLMConfig {
-  const apiKey = process.env.OPENROUTER_API_KEY;
+  const envApiKey = process.env.OPENROUTER_API_KEY;
+  
+  let apiKey = envApiKey;
+  
+  if (typeof window !== 'undefined') {
+    const userApiKey = localStorage.getItem('llm_api_key');
+    if (userApiKey && userApiKey.trim()) {
+      apiKey = userApiKey.trim();
+    }
+  }
+  
   if (!apiKey) {
     throw new Error('OPENROUTER_API_KEY environment variable is required');
   }

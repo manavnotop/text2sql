@@ -11,6 +11,17 @@ QueryForge is a conversational business intelligence platform that transforms na
 
 QueryForge bridges the gap between business users and data by leveraging large language models to convert plain English questions into optimized SQL queries. The platform includes a pre-seeded demo database with 10,000+ orders for immediate exploration, while also supporting custom database connections for production use.
 
+## Approach
+
+This platform was built from scratch with custom SQL generation logic:
+
+1. **Demo Database First** - Pre-seeded with 10K+ orders using Faker.js so users can explore immediately without connecting their own database
+2. **Schema Introspection** - On connection, automatically extracts tables, columns, types, and relationships to build context for the LLM
+3. **Natural Language to SQL** - Sends user question + schema context to LLM, which generates PostgreSQL queries
+4. **Query Safety** - Validates queries before execution: blocks destructive operations (DROP, DELETE), limits row counts, enforces timeouts
+5. **Smart Visualizations** - Analyzes result data shape to recommend optimal chart types (bar, line, pie, scatter, table)
+6. **Dashboard Persistence** - Users can save query results as widgets and arrange them into shareable dashboards
+
 ## Features
 
 - **Natural Language to SQL**: Convert questions like "What are our top-selling products?" into executable SQL queries
@@ -330,6 +341,79 @@ my-app/
 │   ├── setup.ts       # Database setup
 │   └── seed.ts       # Demo data seeding
 └── package.json
+```
+
+## Architecture
+
+```mermaid
+graph TB
+    subgraph Client["Frontend (Next.js React)"]
+        UI[User Interface]
+        Chat[Chat Interface]
+        Charts[Chart Visualization]
+        Dashboards[Dashboards]
+    end
+
+    subgraph NextJS["Next.js API Routes"]
+        QueryAPI["/api/query"]
+        SchemaAPI["/api/schema"]
+        ConnectAPI["/api/connect"]
+        DashboardAPI["/api/dashboards"]
+    end
+
+    subgraph Lib["Core Libraries"]
+        LLM[LLM Integration]
+        Schema[Schema Analysis]
+        QuerySafety[Query Safety]
+        ChartRec[Chart Recommendation]
+    end
+
+    subgraph Database["Database Layer"]
+        DemoDB[Demo Database<br/>10K+ Orders]
+        CustomDB[Custom User Database]
+        ConnectionMgr[Connection Manager]
+    end
+
+    UI --> QueryAPI
+    UI --> SchemaAPI
+    UI --> ConnectAPI
+    UI --> DashboardAPI
+
+    QueryAPI --> LLM
+    QueryAPI --> QuerySafety
+    QueryAPI --> ChartRec
+    
+    SchemaAPI --> Schema
+    ConnectAPI --> ConnectionMgr
+    
+    LLM --> Schema
+    Schema --> DemoDB
+    Schema --> CustomDB
+    
+    QuerySafety --> DemoDB
+    QuerySafety --> CustomDB
+    
+    Charts --> ChartRec
+    
+    DemoDB ---|Faker.js Seed| Seed[Seed Script]
+```
+
+### Data Flow
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant Frontend
+    participant LLM
+    participant DB
+    
+    User->>Frontend: "What are top products?"
+    Frontend->>LLM: question + schema context
+    LLM-->>Frontend: SQL query
+    Frontend->>DB: Execute SQL
+    DB-->>Frontend: Results
+    Frontend->>Frontend: Recommend chart type
+    Frontend-->>User: Bar chart + table
 ```
 
 ## Deployment
