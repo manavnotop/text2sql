@@ -1,15 +1,8 @@
-# QueryForge - Conversational BI Platform
-
-[//]: # (![TypeScript](https://img.shields.io/badge/TypeScript-5.7-blue))
-[//]: # (![Next.js](https://img.shields.io/badge/Next.js-16.2-black))
-[//]: # (![PostgreSQL](https://img.shields.io/badge/PostgreSQL-416982?logo=postgresql))
-[//]: # (![License](https://img.shields.io/badge/License-MIT-green))
-
-QueryForge is a conversational business intelligence platform that transforms natural language questions into SQL queries, enabling users to explore and visualize data without writing code.
+Conversational BI Platform
 
 ## Description
 
-QueryForge bridges the gap between business users and data by leveraging large language models to convert plain English questions into optimized SQL queries. The platform includes a pre-seeded demo database with 10,000+ orders for immediate exploration, while also supporting custom database connections for production use.
+This project bridges the gap between business users and data by leveraging large language models to convert plain English questions into optimized SQL queries. The platform includes a pre-seeded demo database with 10,000+ orders for immediate exploration, while also supporting custom database connections for production use.
 
 ## Approach
 
